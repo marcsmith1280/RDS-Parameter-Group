@@ -1,0 +1,52 @@
+pipeline {
+    agent {
+        label 'terraform-hashicorp'
+    }
+
+    parameters {
+        file(name: 'RDS_JSON_FILE', description: 'Upload the RDS parameter JSON file')
+    }
+
+    stages {
+        stage('Build-Container') {
+            steps {
+                container('terraform-cli-072024') {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS Role Name', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        script {
+                            try {
+                                sh '''
+                                set +x
+                                set +e
+
+                                echo "Checking for buffer control"
+                                which stdbuf
+                                echo
+
+                                echo "Generating and Testing List of Active Accounts in Organizations"
+                                echo "This will take a while"
+
+                                # Loop through accounts and call the creation script
+                                for account in $(cat test-account.txt); do
+                                    bash rds-parameter-group-creation.sh $account "${RDS_JSON_FILE}"
+                                done
+                                '''
+                            } catch (Exception e) {
+                                currentBuild.result = 'FAILURE'
+                                error "Script execution failed: ${e.getMessage()}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "RDS Parameter Group creation and modification completed successfully."
+        }
+        failure {
+            echo "There was an issue with creating or modifying the RDS parameter group."
+        }
+    }
+}
