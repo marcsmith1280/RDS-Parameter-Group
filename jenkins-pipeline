@@ -1,36 +1,50 @@
 pipeline {
     agent {
+        // Specifies that the pipeline should run on an agent labeled 'terraform-hashicorp'
         label 'terraform-hashicorp'
     }
 
     parameters {
+        // Defines a file parameter that allows users to upload an RDS JSON file 
+        // containing the parameter group configurations
         file(name: 'RDS_JSON_FILE', description: 'Upload the RDS parameter JSON file')
     }
 
     stages {
         stage('Build-Container') {
             steps {
+                // Specifies that the steps should be executed inside the 'terraform-cli-072024' container
                 container('terraform-cli-072024') {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'AWS Role Name', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding', 
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                        credentialsId: 'AWS Role Name', 
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
                         script {
                             try {
                                 sh '''
+                                # Disable command echoing for security purposes
                                 set +x
+                                # Allow the script to continue execution even if a command fails
                                 set +e
 
                                 echo "Checking for buffer control"
+                                # Verify if the 'stdbuf' command is available
                                 which stdbuf
                                 echo
 
                                 echo "Generating and Testing List of Active Accounts in Organizations"
                                 echo "This will take a while"
 
-                                # Loop through accounts and call the creation script
+                                # Loop through accounts listed in 'test-account.txt' and execute the RDS parameter group creation script
                                 for account in $(cat test-account.txt); do
+                                    # Pass the account ID and the uploaded JSON file to the script
                                     bash rds-parameter-group-creation.sh $account "${RDS_JSON_FILE}"
                                 done
                                 '''
                             } catch (Exception e) {
+                                // If an error occurs, mark the build as failed and print an error message
                                 currentBuild.result = 'FAILURE'
                                 error "Script execution failed: ${e.getMessage()}"
                             }
@@ -43,10 +57,13 @@ pipeline {
 
     post {
         success {
+            // Print a success message if the pipeline completes successfully
             echo "RDS Parameter Group creation and modification completed successfully."
         }
         failure {
+            // Print an error message if the pipeline fails
             echo "There was an issue with creating or modifying the RDS parameter group."
         }
     }
 }
+
