@@ -13,8 +13,8 @@ pipeline {
     stages {
         stage('Build-Container') {
             steps {
-                // Specifies that the steps should be executed inside the 'terraform-cli-072024' container
-                container('terraform-cli-072024') {
+                // Specifies that the steps should be executed inside the 'terraform-cli' container
+                container('terraform-cli') {
                     withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding', 
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
