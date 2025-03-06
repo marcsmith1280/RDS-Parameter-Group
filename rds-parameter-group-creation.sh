@@ -39,8 +39,8 @@ echo "Alias: $(aws iam list-account-aliases --query 'AccountAliases[0]' --output
 aws rds create-db-parameter-group \
     --db-parameter-group-name "${DB_PARAMETER_GROUP_NAME}" \
     --db-parameter-group-family "${DB_PARAMETER_GROUP_FAMILY}" \
-    --description "Reviewed and approved by CMS ISSO, hardened RDS parameter group" \
-    --tags '[{"Key": "ADO", "Value": "CCOM"},{"Key": "EngineType", "Value": "'"${ENGINE_TYPE}"'"},{"Key": "EngineVersion", "Value": "'"${ENGINE_VERSION}"'"},{"Key": "Name", "Value": "'"${DB_PARAMETER_GROUP_NAME}"'"},{"Key": "POC", "Value": "email address"},{"Key": "CMS ISSO", "Value": "approved"}]'
+    --description "Reviewed and approved by ISSO, hardened RDS parameter group" \
+    --tags '[{"Key": "Name", "Value": "RDS-database"},{"Key": "EngineType", "Value": "'"${ENGINE_TYPE}"'"},{"Key": "EngineVersion", "Value": "'"${ENGINE_VERSION}"'"},{"Key": "Name", "Value": "'"${DB_PARAMETER_GROUP_NAME}"'"},{"Key": "POC", "Value": "email address"},{"Key": "ISSO", "Value": "approved"}]'
 
 # Apply parameter modifications from the JSON file to the created DB parameter group
 aws rds modify-db-parameter-group \
